@@ -1,3 +1,22 @@
-# MyWorld
-A 60KB pure OpenGL ES 2.0 voxel engine. Compatible with Android 5.0+.
-Currently 60KB, but the universe inside is getting bigger.
+MyWorld 是一个基于原生 Android 平台开发的微型 3D 体素沙盒游戏（类 Minecraft 机制）。项目未使用任何第三方游戏引擎或图形库，完全基于 Java 与 OpenGL ES 2.0 从底层构建。
+
+核心技术亮点：
+
+1. 极致的体积控制
+   完整的 APK 安装包体积仅为 68.8 KB。项目未引入任何第三方依赖库，所有 UI 元素、材质图集（Atlas）以及像素字体均由代码在运行时程序化生成或通过底层 GL 接口直接渲染。
+2. 异步多线程区块加载架构
+   为解决无限地形生成带来的卡顿问题，项目实现了一套多线程异步渲染管线：
+   · 采用 BlockSnapshot（区块快照）机制，在极短锁时间内完成地形数据的无锁隔离。
+   · 将耗时的网格构建（Chunk Meshing）任务提交至后台线程池处理。
+   · 通过版本号机制（Versioning）丢弃过期的网格上传请求，确保主线程渲染不受阻塞，实现无缝移动加载。
+3. 多级水位流体算法
+   实现了轻量级的流体模拟逻辑。基于元胞自动机（Cellular Automata）规则，水能够向四周扩散并逐级衰减水位，支持阶梯瀑布与下落水柱。在渲染层，利用局部顶点偏移与面剔除（Face Culling）技术，结合半透明混合（Alpha Blending）与按距离排序（Depth Sorting），实现了低开销的水体视觉效果。
+4. 单指解耦触控与 UI 系统
+   通过纯 OpenGL 2D 渲染实现了一套游戏内 HUD（包含摇杆、物品栏、按钮）。底层重写了触摸路由（TouchRouter），彻底解耦了“按键触发”与“视角拖拽”的坐标判定，支持单指按住动作键的同时滑动屏幕旋转视角。
+5. 高度模块化的底层架构
+   · 包含纯手写的矩阵运算库（Mat4）与着色器编译辅助（Shader）。
+   · 采用 AABB（轴对齐包围盒）碰撞检测与扫掠式步进（Swept Step）算法，彻底杜绝高速移动时的穿模现象。
+   · 实现了自动爬坡与卡死自恢复（unstickIfEmbedded）机制。
+   · 所有关键逻辑（物理、异步管线、流体、HUD布局、触控）均配有基于纯 Java 的桌面端自动化测试用例（如 PhysicsTest, AsyncTest 等），确保代码健壮性。
+6. 高兼容与零权限
+   未申请任何系统权限（无存储、无网络）。代码兼容最低 Android 5.0 (API 21)，最高支持 Android 14 (API 34)。采用纯原生 aapt2 与 d8 命令行工具链构建，无 Gradle 依赖。
